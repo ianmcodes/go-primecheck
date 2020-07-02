@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <script type="text/javascript" src="./wasm_exec.js"></script>
+    <script type="module">
+      const go = new Go();
+
+      async function init() {
+        let t0 = performance.now();
+        let result = await WebAssembly.instantiateStreaming(fetch("./main.wasm"), go.importObject)
+        go.run(result.instance);
+        let t1 = performance.now();
+        document.getElementById('info').innerHTML = `WebAssembly module initalized in ${t1 - t0}ms`;
+        console.log(`WebAssembly module initalized in ${t1 - t0}ms`);
+
+        initPrimeCheck();
+        initModPow();
+        initRngGenRange();
+      }
+
+      function initPrimeCheck() {
+        let numInput = document.getElementById("primeCheckNum");
+        let btn = document.getElementById("primeCheckSubmit");
+        let dsp = document.getElementById("primeCheckResult");
+        btn.addEventListener('click',handleInput);
+        function handleInput(evt) {
+          let t0 = performance.now();
+          let result = wasmPrimeCheck(numInput.value,10);
+          let t1 = performance.now();
+          if (result == null) {
+            dsp.innerHTML = "Prime check failed!";
+            return;
+          }
+          if (result) {
+            dsp.innerHTML = `Probably Prime (took ${t1 - t0}ms to complete)`;
+          } else {
+            dsp.innerHTML = `Not Prime (took ${t1 - t0}ms to complete)`;
+          }
+        }
+      }
+
+      function initModPow() {
+        let baseInput = document.getElementById("modPowBase");
+        let expInput = document.getElementById("modPowExp");
+        let modInput = document.getElementById("modPowMod");
+        let btn = document.getElementById("modPowSubmit");
+        let dsp = document.getElementById("modPowResult");
+
+        btn.addEventListener('click',handleInput);
+
+        function handleInput(evt) {
+          let base, exponent, modulus;
+          let t0 = performance.now();
+          let result = wasmModPow(baseInput.value, expInput.value, modInput.value);
+          let t1 = performance.now();
+          if (result == null) {
+            dsp.innerHTML = "ModPow Failed!";
+            return;
+          }
+          dsp.innerHTML = `${result} (took ${t1 - t0}ms to complete)`;
+        }
+      }
+
+      function initRngGenRange() {
+        let minInput = document.getElementById("rngGenRangeMin");
+        let maxInput = document.getElementById("rngGenRangeMax");
+        let btn = document.getElementById("rngGenRangeSubmit");
+        let dsp = document.getElementById("rngGenRangeResult");
+        btn.addEventListener('click',handleInput);
+        function handleInput(evt) {
+          let t0 = performance.now();
+          let result = window.module.rng_gen_range(minInput.value, maxInput.value);
+          let t1 = performance.now();
+          if (result == null) {
+            dsp.innerHTML = "RngGenRange Failed!";
+            return;
+          }
+          dsp.innerHTML = `${result} (took ${t1 - t0}ms to complete)`;
+        }
+      }
+      init();
+    </script>
+  </head>
+  <body>
+    <div id="info"></div>
+    <div>
+      <h1>Prime Check</h1>
+      <input type="number" id="primeCheckNum" placeholder="number to check" />
+      <input type="button" id="primeCheckSubmit" value="Check" />
+      <span id="primeCheckResult"></span>
+    </div>
+    <div>
+      <h1>ModPow</h1>
+      <input type="number" id="modPowBase" placeholder="Base" />
+      <input type="number" id="modPowExp" placeholder="Exponent" />
+      <input type="number" id="modPowMod" placeholder="Modulus" />
+      <input type="button" id="modPowSubmit" value="Calculate" />
+      <span id="modPowResult"></span>
+    </div>
+    <div>
+      <h1>Rng: Gen Range</h1>
+      <input type="number" id="rngGenRangeMin" placeholder="Min" />
+      <input type="number" id="rngGenRangeMax" placeholder="Max" />
+      <input type="button" id="rngGenRangeSubmit" value="Generate" />
+      <span id="rngGenRangeResult"></span>
+    </div>
+  </body>
+</html>
