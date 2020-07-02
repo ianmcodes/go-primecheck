@@ -1,82 +1,75 @@
 package main
 
 import (
-	"math"
-	"math/rand"
 	"syscall/js"
-	"time"
+	"strconv"
+	p "ianmccall.codes/go/primecheck/primecheck"
 )
 
 func main() {
-
+	done := make(chan struct{}, 0)
+	global := js.Global()
+	global.Set("wasmPrimeCheck", js.FuncOf(jsPrimeCheck))
+	global.Set("wasmModPow", js.FuncOf(jsModPow))
+	global.Set("wasmRngGenRange", js.FuncOf(jsRngGenRange))
+	<-done
 }
 
 /**
  * [JS]
- * args[0]: number; Number to test.
+ * args[0]: string; Number to test.
  * args[1]: number; Number of times to run the test.
  */
 func jsPrimeCheck(this js.Value, args []js.Value) interface{} {
-	return "Not implemented"
-}
+	strN := args[0].String()
+	k := args[1].Int()
 
-func primeCheck(n int64, k int) bool {
-	if n == 1 || n == 3 {
-		return true
-	} else if n%2 == 0 {
-		return false
+	n, err := strconv.ParseInt(strN, 10, 64)
+
+	if err != nil {
+		return nil
 	}
 
-	for k > 0 {
-		a := rngGenRange(2, n-2)
-		x := modPow(a, n-1, n)
-		if x != 1 {
-			return false
-		}
-		k--
-	}
-
-	return true
+	return p.PrimeCheck(n, k)
 }
 
 /**
  * [JS]
- * args[0]: number; Base.
- * args[1]: number; Exponent.
- * args[2]: number; Modulus.
+ * args[0]: string; Base.
+ * args[1]: string; Exponent.
+ * args[2]: string; Modulus.
  */
 func jsModPow(this js.Value, args []js.Value) interface{} {
-	return "Not implemented"
-}
+	strBase := args[0].String()
+	strExp := args[1].String()
+	strMod := args[2].String()
 
-func modPow(base int64, exponent int64, modulus int64) int64 {
-	if modulus == 1 {
-		return 0
+	// Convert to int64
+	base, err := strconv.ParseInt(strBase, 10, 64)
+	exp, err := strconv.ParseInt(strExp, 10, 64)
+	mod, err := strconv.ParseInt(strMod, 10, 64)
+
+	if err != nil {
+		return nil
 	}
-	result := int64(1)
-	base = base % modulus
-	for exponent > 0 {
-		if exponent%2 == 1 {
-			result = (result * base) % modulus
-		}
-		exponent = exponent >> 1
-		base = (base * base) % modulus
-	}
-	return result
+	return strconv.FormatInt(p.ModPow(base, exp, mod), 10)
 }
 
 /**
  * [JS]
- * args[0]: number; Minimum value.
- * args[1]: number; Maximum value.
+ * args[0]: string; Minimum value.
+ * args[1]: string; Maximum value.
  */
 func jsRngGenRange(this js.Value, args []js.Value) interface{} {
-	return "Not implemented"
-}
+	strMin := args[0].String()
+	strMax := args[1].String()
 
-func rngGenRange(min int64, max int64) int64 {
-	rand.Seed(time.Now().UnixNano())
+	min, err := strconv.ParseInt(strMin, 10, 64)
+	max, err := strconv.ParseInt(strMax, 10, 64)
 
-	r := max - min
-	return int64(math.Floor(rand.Float64()*float64(r))) + min
+	if err != nil {
+		return nil
+	}
+
+	return strconv.FormatInt(p.RngGenRange(min, max), 10)
 }
