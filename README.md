@@ -1,4 +1,4 @@
-# Implementation of Fermat Prime Test in Go for WebAssembly
+# Implementation of Fermat Prime Test in ~~Go~~ TinyGo for WebAssembly
 
 This is part of a set of projects to compare how different programming languages build to WebAssembly. Other projects in this set include:
 
@@ -25,8 +25,8 @@ Part of the comparison that I am trying to to make is how easy/hard it is for so
 
 ## Prerequisites
 
-* go >= 1.13
+* tinygo >= 0.13
 
 ## Command
 
-`GOOS=js GOARCH=wasm go build -o main.wasm`
+`tinygo build -o main.wasm -target wasm ./main.go`
