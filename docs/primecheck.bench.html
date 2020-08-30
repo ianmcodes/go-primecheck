@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <script src="lodash.min.js" type="text/javascript"></script>
+    <script src="benchmark.js" type="text/javascript"></script>
+    <script src="./wasm_exec.js" type="text/javascript"></script>
+    <script type="module">
+      const go = new Go();
+      const numbers = [BigInt(5), BigInt(13), BigInt(277), BigInt(2999),
+        BigInt(10151), BigInt(154877), BigInt(5297879), BigInt(15485339),
+        BigInt(694847533)];
+
+      let logDsp;
+      const log = (...args) => {
+        console.log(...args);
+        logDsp = logDsp || document.getElementById('log');
+        if (logDsp) {
+          logDsp.innerHTML += args.join(' ') + '\n';
+        }
+      };
+
+      async function init() {
+        log('Running Benchmark...');
+        const result = await WebAssembly.instantiateStreaming(fetch("./main.wasm"), go.importObject);
+        go.run(result.instance);
+        const suite = new Benchmark.Suite;
+        suite.add('primeCheck', function() {
+          numbers.forEach(n => wasmPrimeCheck(n,10));
+        })
+        .on('complete', function() {
+          const results = this[0];
+          const runs = results.stats.sample.length;
+          const mean = results.stats.mean;
+          log(`Mean of ${runs} runs: ${(mean * 1000).toFixed(10)}ms`);
+        })
+        .run({async: true});
+      }
+
+      init();
+    </script>
+  </head>
+  <body>
+    <h1>Benchmark for Prime Check in Go</h1>
+    <div>
+      <pre id="log"></pre>
+    </div>
+  </body>
+</html>
